@@ -1,7 +1,11 @@
 import streamlit as st
 
-# Must be the first Streamlit command
-st.set_page_config(page_title="RAG Chat", layout="wide")
+# Compact app layout
+st.set_page_config(
+    page_title="RAG Chat", 
+    layout="wide",
+    initial_sidebar_state="collapsed"  # Start with sidebar collapsed on mobile
+)
 
 import os
 import tempfile
@@ -293,9 +297,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Add title with more compact styling
+# Add title with more compact styling - much smaller for mobile
 st.markdown("""
-    <h1 style='font-size: 1.5rem; margin-bottom: 0.5rem; margin-top: 0;'>📘 RAG-SWAT</h1>
+    <h1 style='font-size: 1.2rem; margin: 0; padding: 0;'>📘 RAG-SWAT</h1>
 """, unsafe_allow_html=True)
 
 # Create temp folder for uploaded files
@@ -604,11 +608,10 @@ with st.sidebar:
 # Get RAG instance at the app level
 rag = initialize_rag_system()
 
-# Main chat interface with more compact styling
+# Main chat interface with more compact styling - simplified for mobile
 st.markdown("""
-    <div style='text-align: center; padding: 0.5rem 0; margin-bottom: 10px;'>
-        <h2 style='color: #1E3D59; margin-bottom: 5px; font-size: 1.3rem;'>💬 Chat Interface</h2>
-        <p style='color: #2C3E50; font-size: 0.9rem; margin-bottom: 0;'>Ask questions about your documents</p>
+    <div style='text-align: center; padding: 0; margin: 0;'>
+        <h2 style='color: #1E3D59; margin: 0; font-size: 1rem;'>💬 Chat Interface</h2>
     </div>
 """, unsafe_allow_html=True)
 
@@ -758,7 +761,7 @@ if user_question:
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Add JavaScript for better mobile support
+# Add JavaScript for better mobile support and for fixing page height
 st.markdown("""
 <script>
 // Add mobile viewport meta tag
@@ -769,17 +772,38 @@ document.getElementsByTagName('head')[0].appendChild(meta);
 
 // Adjust elements for better mobile display
 document.addEventListener('DOMContentLoaded', function() {
+    // Fix page height issues
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    document.body.style.overflow = 'hidden';
+    
+    var mainApp = document.querySelector('.stApp');
+    if (mainApp) {
+        mainApp.style.height = '100vh';
+        mainApp.style.maxHeight = '100vh';
+        mainApp.style.overflow = 'hidden';
+    }
+    
     // Fix any overflow issues
     var mainContent = document.querySelector('.main .block-container');
     if (mainContent) {
         mainContent.style.overflow = 'hidden';
         mainContent.style.maxWidth = '100%';
+        mainContent.style.paddingTop = '0';
+        mainContent.style.paddingBottom = '60px'; // For chat input
     }
     
     // Make chat container fill available space
     var chatContainer = document.querySelector('.chat-interface');
     if (chatContainer) {
-        chatContainer.style.height = (window.innerHeight - 120) + 'px';
+        chatContainer.style.height = (window.innerHeight - 80) + 'px';
+    }
+    
+    // Reduce space taken by Streamlit header
+    var header = document.querySelector('header[data-testid="stHeader"]');
+    if (header) {
+        header.style.height = 'auto';
+        header.style.padding = '0';
     }
     
     // Function to scroll chat to bottom
@@ -792,11 +816,21 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Scroll to bottom on load and after content changes
     scrollToBottom();
+    setInterval(scrollToBottom, 500); // Check periodically
+    
     var observer = new MutationObserver(scrollToBottom);
     var chatHistory = document.querySelector('.chat-history');
     if (chatHistory) {
         observer.observe(chatHistory, { childList: true, subtree: true });
     }
+    
+    // Resize event handler to maintain proper dimensions
+    window.addEventListener('resize', function() {
+        if (chatContainer) {
+            chatContainer.style.height = (window.innerHeight - 80) + 'px';
+        }
+        scrollToBottom();
+    });
 });
 </script>
 """, unsafe_allow_html=True)
